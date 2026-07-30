@@ -82,3 +82,55 @@ export interface DataSource {
   selected: boolean;
   trust: number;
 }
+
+export interface FreeAgent {
+  id: string;
+  name: string;
+  pos: Position;
+  nflTeam: string;
+  projected: number;
+  lastWeek: number;
+  trend: number;
+  ownership: number;
+  agentRecommendation: "high" | "medium" | "low" | "pass";
+  agentNote: string;
+  suggestedBid: number;
+}
+
+export interface Message {
+  id: string;
+  teamId: string;
+  teamName: string;
+  agentName: string;
+  accentColor: string;
+  author: "owner" | "agent";
+  authorName: string;
+  text: string;
+  timestamp: string;
+  likes: number;
+  likedByMe: boolean;
+  replies?: Message[];
+}
+
+export type LLMProvider = "openai" | "anthropic" | "zai" | "custom";
+
+export interface AgentConnection {
+  provider: LLMProvider;
+  label: string;
+  model: string;
+  apiKeyMasked: string;
+  baseUrl: string;
+  status: "connected" | "disconnected" | "error";
+  lastPing: string;
+  monthlySpend: number;
+  tokensUsed: number;
+}
+
+export interface AgentPersonality {
+  name: string;
+  tagline: string;
+  riskTolerance: number;
+  aggressiveness: number;
+  chatterLevel: number;
+  tradeFrequency: number;
+}

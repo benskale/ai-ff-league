@@ -1,14 +1,26 @@
 import Link from "next/link";
 import { teams, decisions, matchups, myTeamId, currentWeek } from "@/lib/mockData";
 
-export default function DashboardPage() {
+const typeMeta: Record<string, { color: string; bg: string; label: string }> = {
+  draft: { color: "text-gray-400", bg: "bg-gray-500/20", label: "DRAFT" },
+  lineup: { color: "text-blue-400", bg: "bg-blue-500/20", label: "LINEUP" },
+  waiver: { color: "text-field-bright", bg: "bg-field-dim/30", label: "WAIVER" },
+  trade: { color: "text-orange-400", bg: "bg-orange-500/20", label: "TRADE" },
+  strategy: { color: "text-accent-glow", bg: "bg-accent/20", label: "STRATEGY" },
+};
+
+export default function HomePage() {
   const myTeam = teams.find((t) => t.id === myTeamId)!;
   const upcomingMatchup = matchups.find(
     (m) => m.status === "upcoming" && (m.homeTeamId === myTeamId || m.awayTeamId === myTeamId)
   );
   const opponent = upcomingMatchup
     ? teams.find(
-        (t) => t.id === (upcomingMatchup.homeTeamId === myTeamId ? upcomingMatchup.awayTeamId : upcomingMatchup.homeTeamId)
+        (t) =>
+          t.id ===
+          (upcomingMatchup.homeTeamId === myTeamId
+            ? upcomingMatchup.awayTeamId
+            : upcomingMatchup.homeTeamId)
       )
     : null;
 
@@ -19,202 +31,387 @@ export default function DashboardPage() {
     return b.pointsFor - a.pointsFor;
   });
   const myRank = sortedTeams.findIndex((t) => t.id === myTeamId) + 1;
-
-  const recentDecisions = decisions.slice(0, 4);
+  const recentDecisions = decisions.slice(0, 3);
   const injuredPlayers = myTeam.roster.filter(
     (s) => s.player?.status && s.player.status !== "healthy"
   );
 
   return (
     <div className="space-y-8 fade-in pt-14 lg:pt-0">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white">{myTeam.name}</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Agent: <span className="text-accent-glow font-mono">{myTeam.agentName}</span> &middot; {myTeam.agentPersona}
-          </p>
-        </div>
-        <div className="flex items-center gap-6">
-          <div>
-            <div className="text-2xl font-bold text-white">
-              {myTeam.wins}-{myTeam.losses}
+      {/* Hero card */}
+      <div
+        className="rounded-2xl border border-ink-400 overflow-hidden relative"
+        style={{
+          background: `linear-gradient(135deg, ${myTeam.accentColor}22 0%, #161b22 55%, #0d1117 100%)`,
+        }}
+      >
+        <div
+          className="absolute left-0 top-0 bottom-0 w-1.5"
+          style={{ backgroundColor: myTeam.accentColor }}
+        />
+        <div className="p-6 sm:p-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div>
+              <div className="text-xs uppercase tracking-widest text-gray-500 mb-1">
+                Week {currentWeek} · Your Team
+              </div>
+              <h1 className="text-3xl font-bold text-white">{myTeam.name}</h1>
+              <div className="flex items-center gap-2 mt-2">
+                <span
+                  className="font-mono text-sm"
+                  style={{ color: myTeam.accentColor }}
+                >
+                  {myTeam.agentName}
+                </span>
+                <span className="text-gray-600">·</span>
+                <span className="text-sm text-gray-500">{myTeam.agentPersona}</span>
+              </div>
             </div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide">Record</div>
+            <div className="flex items-center gap-6 sm:gap-8">
+              <div>
+                <div className="text-3xl font-bold text-white">
+                  {myTeam.wins}-{myTeam.losses}
+                  {myTeam.ties > 0 ? `-${myTeam.ties}` : ""}
+                </div>
+                <div className="text-xs text-gray-500 uppercase tracking-wide mt-1">
+                  Record
+                </div>
+              </div>
+              <div className="w-px h-12 bg-ink-400" />
+              <div>
+                <div
+                  className="text-3xl font-bold"
+                  style={{ color: myTeam.accentColor }}
+                >
+                  #{myRank}
+                </div>
+                <div className="text-xs text-gray-500 uppercase tracking-wide mt-1">
+                  Rank
+                </div>
+              </div>
+              <div className="w-px h-12 bg-ink-400" />
+              <div>
+                <div className="text-3xl font-bold text-field-bright">
+                  {myTeam.streak}
+                </div>
+                <div className="text-xs text-gray-500 uppercase tracking-wide mt-1">
+                  Streak
+                </div>
+              </div>
+            </div>
           </div>
-          <div>
-            <div className="text-2xl font-bold text-field-bright">{myRank}</div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide">Rank</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-accent-glow">{myTeam.streak}</div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide">Streak</div>
+          {/* Quick stat strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+            <div className="bg-ink-800/60 rounded-lg px-4 py-3 border border-ink-400/50">
+              <div className="text-lg font-mono font-bold text-white">
+                {myTeam.pointsFor.toFixed(1)}
+              </div>
+              <div className="text-xs text-gray-500">Points For</div>
+            </div>
+            <div className="bg-ink-800/60 rounded-lg px-4 py-3 border border-ink-400/50">
+              <div className="text-lg font-mono font-bold text-gray-400">
+                {myTeam.pointsAgainst.toFixed(1)}
+              </div>
+              <div className="text-xs text-gray-500">Points Against</div>
+            </div>
+            <div className="bg-ink-800/60 rounded-lg px-4 py-3 border border-ink-400/50">
+              <div className="text-lg font-mono font-bold text-white">
+                ${myTeam.faab}
+              </div>
+              <div className="text-xs text-gray-500">FAAB Left</div>
+            </div>
+            <div className="bg-ink-800/60 rounded-lg px-4 py-3 border border-ink-400/50">
+              <div className="text-lg font-mono font-bold text-white">
+                #{myTeam.waiverPriority}
+              </div>
+              <div className="text-xs text-gray-500">Waiver Priority</div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Top row: Agent status + Matchup */}
+      {/* Agent status + Matchup teaser */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Agent status */}
         <div className="lg:col-span-2 bg-ink-700 border border-ink-400 rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">Agent Status</h2>
+            <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
+              Agent Status
+            </h2>
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-field-bright live-dot" />
-              <span className="text-xs text-field-bright">Online</span>
+              <span className="text-xs text-field-bright">COACH-Z Online</span>
             </div>
           </div>
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+          <div className="flex items-start gap-3 mb-4">
+            <div
+              className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: `${myTeam.accentColor}20` }}
+            >
+              <svg
+                className="w-5 h-5"
+                style={{ color: myTeam.accentColor }}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <div className="text-sm text-white">
+                Scanning waivers for Week {currentWeek + 1} values
               </div>
-              <div className="flex-1">
-                <div className="text-sm text-white">Scanning waivers for Week {currentWeek + 1} values</div>
-                <div className="text-xs text-gray-500 mt-0.5">
-                  Last decision: 2 hours ago &middot; Monitoring injury reports for 3 players
+              <div className="text-xs text-gray-500 mt-0.5">
+                Last decision 2h ago · Monitoring injury reports for{" "}
+                {injuredPlayers.length} player
+                {injuredPlayers.length === 1 ? "" : "s"} · {decisions.length} total
+                moves this season
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {injuredPlayers.length > 0 ? (
+              injuredPlayers.map((slot) => (
+                <div
+                  key={slot.player!.id}
+                  className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-1.5"
+                >
+                  <span className="text-xs font-semibold text-yellow-400">
+                    {slot.player!.status?.toUpperCase()}
+                  </span>
+                  <span className="text-xs text-gray-300">{slot.player!.name}</span>
                 </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3 pt-3">
-              <div className="bg-ink-600/50 rounded-lg p-3 text-center">
-                <div className="text-lg font-bold text-white">{myTeam.faab}</div>
-                <div className="text-xs text-gray-500">FAAB Left</div>
-              </div>
-              <div className="bg-ink-600/50 rounded-lg p-3 text-center">
-                <div className="text-lg font-bold text-white">#{myTeam.waiverPriority}</div>
-                <div className="text-xs text-gray-500">Waiver Priority</div>
-              </div>
-              <div className="bg-ink-600/50 rounded-lg p-3 text-center">
-                <div className="text-lg font-bold text-white">{decisions.length}</div>
-                <div className="text-xs text-gray-500">Total Moves</div>
-              </div>
-            </div>
+              ))
+            ) : (
+              <div className="text-xs text-gray-600">No injury concerns</div>
+            )}
           </div>
         </div>
 
-        {/* Upcoming matchup */}
+        {/* Matchup teaser */}
         <div className="bg-ink-700 border border-ink-400 rounded-xl p-6">
-          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">Week {currentWeek} Matchup</h2>
+          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">
+            Week {currentWeek} Matchup
+          </h2>
           {opponent && (
             <div className="space-y-4">
-              <div className="text-center">
-                <div className="text-xs text-gray-500 mb-3">vs</div>
-                <div className="text-xl font-bold text-white">{opponent.name}</div>
-                <div className="text-sm text-gray-500 mt-1">
-                  {opponent.wins}-{opponent.losses} &middot; Agent: {opponent.agentName}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-2 h-10 rounded-full"
+                    style={{ backgroundColor: myTeam.accentColor }}
+                  />
+                  <div>
+                    <div className="text-sm font-medium text-white">
+                      {myTeam.name}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {myTeam.wins}-{myTeam.losses}
+                    </div>
+                  </div>
+                </div>
+                <span className="text-xs font-mono text-gray-600">VS</span>
+                <div className="flex items-center gap-2">
+                  <div className="text-right">
+                    <div className="text-sm font-medium text-white">
+                      {opponent.name}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {opponent.wins}-{opponent.losses}
+                    </div>
+                  </div>
+                  <div
+                    className="w-2 h-10 rounded-full"
+                    style={{ backgroundColor: opponent.accentColor }}
+                  />
                 </div>
               </div>
-              <div className="flex items-center justify-center gap-4 pt-2">
+              <div className="flex items-center justify-center gap-6 pt-2">
                 <div className="text-center">
-                  <div className="text-2xl font-bold" style={{ color: myTeam.accentColor }}>
+                  <div
+                    className="text-2xl font-bold font-mono"
+                    style={{ color: myTeam.accentColor }}
+                  >
                     {myTeam.pointsFor.toFixed(1)}
                   </div>
-                  <div className="text-xs text-gray-500">PF</div>
+                  <div className="text-xs text-gray-600">PF</div>
                 </div>
-                <div className="text-gray-600">-</div>
+                <div className="text-gray-700 text-sm">vs</div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold" style={{ color: opponent.accentColor }}>
+                  <div
+                    className="text-2xl font-bold font-mono"
+                    style={{ color: opponent.accentColor }}
+                  >
                     {opponent.pointsFor.toFixed(1)}
                   </div>
-                  <div className="text-xs text-gray-500">PF</div>
+                  <div className="text-xs text-gray-600">PF</div>
                 </div>
               </div>
               <Link
-                href="/standings"
-                className="block text-center text-xs text-accent hover:text-accent-glow pt-2"
+                href="/matchup"
+                className="block text-center text-xs font-medium text-accent hover:text-accent-glow pt-2 border-t border-ink-400"
               >
-                View matchup details
+                View full matchup →
               </Link>
             </div>
           )}
         </div>
       </div>
 
-      {/* Injury alerts */}
-      {injuredPlayers.length > 0 && (
-        <div className="bg-ink-700 border border-yellow-500/30 rounded-xl p-6">
-          <h2 className="text-sm font-semibold text-yellow-400 uppercase tracking-wide mb-3">
-            Injury Alerts
-          </h2>
-          <div className="space-y-2">
-            {injuredPlayers.map((slot) => (
-              <div key={slot.player!.id} className="flex items-center gap-3">
-                <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                  slot.player!.status === "questionable" ? "bg-yellow-500/20 text-yellow-400" : "bg-red-500/20 text-red-400"
-                }`}>
-                  {slot.player!.status?.toUpperCase()}
-                </span>
-                <span className="text-sm text-white">{slot.player!.name}</span>
-                <span className="text-xs text-gray-500">{slot.player!.pos} &middot; {slot.player!.nflTeam}</span>
-                <span className="text-xs text-gray-600 ml-auto">{slot.slot}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Recent decisions */}
+      {/* Standings table */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">Recent Agent Decisions</h2>
-          <Link href="/agent" className="text-xs text-accent hover:text-accent-glow">
-            View all
-          </Link>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
+            League Standings
+          </h2>
+          <span className="text-xs text-gray-600">
+            10 teams · Top 6 make playoffs
+          </span>
         </div>
-        <div className="space-y-3">
-          {recentDecisions.map((d) => (
-            <Link
-              key={d.id}
-              href="/agent"
-              className="block bg-ink-700 border border-ink-400 rounded-lg p-4 hover:border-accent/40 transition-colors"
-            >
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 mt-0.5">
-                  <span className={`inline-block px-2 py-0.5 rounded text-xs font-mono ${
-                    d.type === "lineup" ? "bg-blue-500/20 text-blue-400" :
-                    d.type === "waiver" ? "bg-field-dim/30 text-field-bright" :
-                    d.type === "trade" ? "bg-orange-500/20 text-orange-400" :
-                    d.type === "strategy" ? "bg-accent/20 text-accent-glow" :
-                    "bg-gray-500/20 text-gray-400"
-                  }`}>
-                    {d.type.toUpperCase()}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm text-white">{d.title}</div>
-                  <div className="text-xs text-gray-500 mt-0.5">{d.description}</div>
-                </div>
-                <div className="flex-shrink-0 text-right">
-                  <div className="text-xs text-gray-500">Confidence</div>
-                  <div className="text-sm font-mono text-white">{d.confidence}%</div>
-                </div>
-              </div>
-            </Link>
-          ))}
+        <div className="bg-ink-700 border border-ink-400 rounded-xl overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-ink-400 text-xs text-gray-500 uppercase tracking-wide">
+                <th className="text-left py-3 px-4">#</th>
+                <th className="text-left py-3 px-2">Team</th>
+                <th className="text-left py-3 px-2 hidden sm:table-cell">Agent</th>
+                <th className="text-center py-3 px-2">W-L</th>
+                <th className="text-center py-3 px-2 hidden sm:table-cell">PF</th>
+                <th className="text-center py-3 px-2 hidden md:table-cell">PA</th>
+                <th className="text-center py-3 px-2">Streak</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedTeams.map((team, idx) => {
+                const isMe = team.id === myTeamId;
+                const isPlayoff = idx < 6;
+                return (
+                  <tr
+                    key={team.id}
+                    className={`border-b border-ink-400/50 transition-colors ${
+                      isMe ? "bg-accent/5" : "hover:bg-ink-600/30"
+                    }`}
+                  >
+                    <td className="py-3 px-4">
+                      <span
+                        className={`font-mono ${
+                          isPlayoff ? "text-field-bright" : "text-gray-600"
+                        }`}
+                      >
+                        {idx + 1}
+                      </span>
+                    </td>
+                    <td className="py-3 px-2">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-2 h-8 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: team.accentColor }}
+                        />
+                        <div>
+                          <div
+                            className={`font-medium ${
+                              isMe ? "text-white" : "text-gray-300"
+                            }`}
+                          >
+                            {team.name}
+                            {isMe && (
+                              <span className="ml-2 text-xs text-accent-glow">
+                                YOU
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-600 sm:hidden">
+                            {team.agentName}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-2 hidden sm:table-cell">
+                      <span className="font-mono text-xs text-gray-500">
+                        {team.agentName}
+                      </span>
+                    </td>
+                    <td className="py-3 px-2 text-center font-mono text-white">
+                      {team.wins}-{team.losses}
+                    </td>
+                    <td className="py-3 px-2 text-center font-mono text-gray-400 hidden sm:table-cell">
+                      {team.pointsFor.toFixed(1)}
+                    </td>
+                    <td className="py-3 px-2 text-center font-mono text-gray-500 hidden md:table-cell">
+                      {team.pointsAgainst.toFixed(1)}
+                    </td>
+                    <td className="py-3 px-2 text-center">
+                      <span
+                        className={`font-mono text-xs ${
+                          team.streak.startsWith("W")
+                            ? "text-field-bright"
+                            : team.streak.startsWith("L")
+                            ? "text-red-400"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {team.streak}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* Quick links */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Link href="/draft" className="bg-ink-700 border border-ink-400 rounded-xl p-4 hover:border-accent/40 transition-colors text-center">
-          <div className="text-2xl mb-1">📋</div>
-          <div className="text-xs text-gray-400">Draft Board</div>
-        </Link>
-        <Link href="/strategy" className="bg-ink-700 border border-ink-400 rounded-xl p-4 hover:border-accent/40 transition-colors text-center">
-          <div className="text-2xl mb-1">⚙️</div>
-          <div className="text-xs text-gray-400">Strategy</div>
-        </Link>
-        <Link href="/agent" className="bg-ink-700 border border-ink-400 rounded-xl p-4 hover:border-accent/40 transition-colors text-center">
-          <div className="text-2xl mb-1">🧠</div>
-          <div className="text-xs text-gray-400">Agent Log</div>
-        </Link>
-        <Link href="/roster" className="bg-ink-700 border border-ink-400 rounded-xl p-4 hover:border-accent/40 transition-colors text-center">
-          <div className="text-2xl mb-1">👥</div>
-          <div className="text-xs text-gray-400">Roster</div>
-        </Link>
+      {/* Recent agent decisions */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
+            Recent Agent Decisions
+          </h2>
+          <Link
+            href="/agent"
+            className="text-xs text-accent hover:text-accent-glow"
+          >
+            View all →
+          </Link>
+        </div>
+        <div className="space-y-3">
+          {recentDecisions.map((d) => {
+            const meta = typeMeta[d.type] ?? typeMeta.draft;
+            return (
+              <Link
+                key={d.id}
+                href="/agent"
+                className="block bg-ink-700 border border-ink-400 rounded-lg p-4 hover:border-accent/40 transition-colors"
+              >
+                <div className="flex items-start gap-3">
+                  <span
+                    className={`inline-block px-2 py-0.5 rounded text-xs font-mono flex-shrink-0 ${meta.bg} ${meta.color}`}
+                  >
+                    {meta.label}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-white">{d.title}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">
+                      {d.description}
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 text-right">
+                    <div className="text-xs text-gray-600">Confidence</div>
+                    <div className="text-sm font-mono text-white">
+                      {d.confidence}%
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
