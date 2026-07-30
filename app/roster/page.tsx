@@ -57,7 +57,7 @@ export default function RosterPage() {
   };
 
   return (
-    <div className="space-y-6 fade-in pt-14 lg:pt-0">
+    <div className="space-y-6 fade-in">
       <div className="flex items-end justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">{myTeam.name} Roster</h1>

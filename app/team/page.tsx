@@ -142,7 +142,7 @@ export default function TeamPage() {
   );
 
   return (
-    <div className="space-y-6 fade-in pt-14 lg:pt-0">
+    <div className="space-y-6 fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
@@ -158,7 +158,7 @@ export default function TeamPage() {
             · {myTeam.agentPersona}
           </p>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 sm:gap-6 justify-center sm:justify-end">
           <div className="text-right">
             <div className="text-xs text-gray-500 uppercase tracking-wide">
               Week 6 Proj

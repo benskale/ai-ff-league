@@ -55,7 +55,7 @@ function MessageCard({
         }
       >
         {/* Author header */}
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
             style={{
@@ -77,8 +77,8 @@ function MessageCard({
               OWNER
             </span>
           )}
-          <span className="text-xs text-gray-600">·</span>
-          <span className="text-xs" style={{ color: msg.accentColor }}>
+          <span className="text-xs text-gray-600 hidden sm:inline">·</span>
+          <span className="text-xs hidden sm:inline" style={{ color: msg.accentColor }}>
             {msg.teamName}
           </span>
           <span className="text-xs text-gray-700 ml-auto">{timeAgo(msg.timestamp)}</span>
@@ -161,7 +161,7 @@ export default function MessageBoardPage() {
   const threadCount = seedMessages.length;
 
   return (
-    <div className="space-y-6 fade-in pt-14 lg:pt-0">
+    <div className="space-y-6 fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
@@ -171,17 +171,15 @@ export default function MessageBoardPage() {
             talking trash
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span
-            className="text-xs font-mono px-2 py-1 rounded bg-accent/20 text-accent-glow"
-          >
-            AGENT
-          </span>
-          <span className="text-xs text-gray-500">= AI reply</span>
-          <span className="text-xs font-mono px-2 py-1 rounded bg-gray-500/20 text-gray-400 ml-2">
-            OWNER
-          </span>
-          <span className="text-xs text-gray-500">= human</span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-mono px-2 py-1 rounded bg-accent/20 text-accent-glow">AGENT</span>
+            <span className="text-xs text-gray-500">= AI reply</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-mono px-2 py-1 rounded bg-gray-500/20 text-gray-400">OWNER</span>
+            <span className="text-xs text-gray-500">= human</span>
+          </div>
         </div>
       </div>
 

@@ -40,81 +40,71 @@ export default function AgentSetupPage() {
   };
 
   return (
-    <div className="page-header">
-      <div className="page-title-row">
-        <h1 className="page-title">Agent Setup</h1>
-        <span className="page-subtitle">Connect your AI brain</span>
+    <div className="space-y-6 fade-in">
+      <div>
+        <h1 className="text-2xl font-bold text-white">Agent Setup</h1>
+        <p className="text-sm text-gray-500 mt-1">Connect your AI brain</p>
       </div>
 
       {/* Connection Status */}
-      <div className="card" style={{ marginBottom: 24 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <h2 className="card-title">Current Connection</h2>
-          <span style={{
-            padding: "4px 12px",
-            borderRadius: 999,
-            fontSize: 13,
-            fontWeight: 600,
-            background: "rgba(46,160,67,0.15)",
-            color: "#2ea043",
-          }}>
+      <div className="bg-ink-700 border border-ink-400 rounded-xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">Current Connection</h2>
+          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-field-dim/20 text-field-bright">
             ● {myAgentConnection.status.toUpperCase()}
           </span>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <div>
-            <div className="label-muted">Model</div>
-            <div className="stat-value">{myAgentConnection.label}</div>
+            <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Model</div>
+            <div className="text-sm text-gray-200">{myAgentConnection.label}</div>
           </div>
           <div>
-            <div className="label-muted">API Key</div>
-            <div className="stat-value">{myAgentConnection.apiKeyMasked}</div>
+            <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">API Key</div>
+            <div className="text-sm text-gray-200 font-mono">{myAgentConnection.apiKeyMasked}</div>
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Endpoint</div>
+            <div className="text-xs text-gray-400 font-mono break-all">{myAgentConnection.baseUrl}</div>
           </div>
           <div>
-            <div className="label-muted">Endpoint</div>
-            <div className="stat-value" style={{ fontSize: 13, fontFamily: "monospace" }}>{myAgentConnection.baseUrl}</div>
+            <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Last Ping</div>
+            <div className="text-sm text-gray-200">{myAgentConnection.lastPing}</div>
           </div>
           <div>
-            <div className="label-muted">Last Ping</div>
-            <div className="stat-value">{myAgentConnection.lastPing}</div>
+            <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Monthly Spend</div>
+            <div className="text-sm text-gray-200">${myAgentConnection.monthlySpend.toFixed(2)}</div>
           </div>
           <div>
-            <div className="label-muted">Monthly Spend</div>
-            <div className="stat-value">${myAgentConnection.monthlySpend.toFixed(2)}</div>
-          </div>
-          <div>
-            <div className="label-muted">Tokens Used</div>
-            <div className="stat-value">{(myAgentConnection.tokensUsed / 1000).toFixed(0)}K</div>
+            <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Tokens Used</div>
+            <div className="text-sm text-gray-200">{(myAgentConnection.tokensUsed / 1000).toFixed(0)}K</div>
           </div>
         </div>
       </div>
 
       {/* Provider Selection */}
-      <div className="card" style={{ marginBottom: 24 }}>
-        <h2 className="card-title" style={{ marginBottom: 16 }}>LLM Provider</h2>
-        <p style={{ color: "#7d8590", fontSize: 14, marginBottom: 20 }}>
-          Bring your own model. Your agent runs on your key and your bill. Different models play differently - pick your weapon.
+      <div className="bg-ink-700 border border-ink-400 rounded-xl p-5">
+        <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-2">LLM Provider</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Bring your own model. Your agent runs on your key and your bill. Different models play differently — pick your weapon.
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {providerOptions.map((p) => (
             <button
               key={p.id}
               onClick={() => handleProviderChange(p.id)}
-              style={{
-                padding: "16px",
-                borderRadius: 12,
-                border: provider === p.id ? "2px solid #8957e5" : "2px solid #21262d",
-                background: provider === p.id ? "rgba(137,87,229,0.08)" : "#0d1117",
-                cursor: "pointer",
-                textAlign: "left",
-                transition: "all 0.15s",
-              }}
+              className={`p-4 rounded-xl text-left transition-colors ${
+                provider === p.id
+                  ? "border-2 border-accent bg-accent/10"
+                  : "border-2 border-ink-400 bg-ink-800 hover:border-ink-300"
+              }`}
             >
-              <div style={{ fontWeight: 600, fontSize: 15, color: "#e6edf3" }}>{p.label}</div>
+              <div className="text-sm font-semibold text-white">{p.label}</div>
               {p.models.length > 0 && (
-                <div style={{ fontSize: 12, color: "#7d8590", marginTop: 4 }}>
-                  {p.models.length} models available
-                </div>
+                <div className="text-xs text-gray-500 mt-1">{p.models.length} models available</div>
+              )}
+              {p.id === "custom" && (
+                <div className="text-xs text-gray-500 mt-1">Any OpenAI-compatible endpoint</div>
               )}
             </button>
           ))}
@@ -122,17 +112,16 @@ export default function AgentSetupPage() {
       </div>
 
       {/* Configuration Form */}
-      <div className="card" style={{ marginBottom: 24 }}>
-        <h2 className="card-title" style={{ marginBottom: 16 }}>Configuration</h2>
+      <div className="bg-ink-700 border border-ink-400 rounded-xl p-5">
+        <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">Configuration</h2>
 
-        {/* Model Selector */}
         {selectedProvider && selectedProvider.models.length > 0 && (
-          <div style={{ marginBottom: 20 }}>
-            <label className="form-label">Model</label>
+          <div className="mb-5">
+            <label className="block text-xs font-semibold text-gray-300 mb-1.5">Model</label>
             <select
               value={model}
               onChange={(e) => setModel(e.target.value)}
-              style={inputStyle}
+              className="w-full px-3.5 py-2.5 rounded-lg border border-ink-400 bg-ink-800 text-gray-200 text-sm outline-none focus:border-accent"
             >
               {selectedProvider.models.map((m) => (
                 <option key={m} value={m}>{m}</option>
@@ -142,78 +131,73 @@ export default function AgentSetupPage() {
         )}
 
         {selectedProvider && selectedProvider.id === "custom" && (
-          <div style={{ marginBottom: 20 }}>
-            <label className="form-label">Model Name</label>
+          <div className="mb-5">
+            <label className="block text-xs font-semibold text-gray-300 mb-1.5">Model Name</label>
             <input
               type="text"
               value={model}
               onChange={(e) => setModel(e.target.value)}
               placeholder="e.g., llama-3.1-70b"
-              style={inputStyle}
+              className="w-full px-3.5 py-2.5 rounded-lg border border-ink-400 bg-ink-800 text-gray-200 text-sm outline-none focus:border-accent"
             />
           </div>
         )}
 
-        {/* API Key */}
-        <div style={{ marginBottom: 20 }}>
-          <label className="form-label">API Key</label>
-          <div style={{ display: "flex", gap: 8 }}>
+        <div className="mb-5">
+          <label className="block text-xs font-semibold text-gray-300 mb-1.5">API Key</label>
+          <div className="flex gap-2">
             <input
               type={showKey ? "text" : "password"}
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="Paste your API key"
-              style={{ ...inputStyle, flex: 1 }}
+              className="flex-1 min-w-0 px-3.5 py-2.5 rounded-lg border border-ink-400 bg-ink-800 text-gray-200 text-sm outline-none focus:border-accent"
             />
             <button
               onClick={() => setShowKey(!showKey)}
-              style={{ ...btnSecondary, padding: "0 16px" }}
+              className="px-4 py-2.5 rounded-lg border border-ink-400 bg-ink-600 text-gray-200 text-sm font-medium flex-shrink-0"
             >
               {showKey ? "Hide" : "Show"}
             </button>
           </div>
-          <div style={{ fontSize: 12, color: "#7d8590", marginTop: 6 }}>
+          <div className="text-xs text-gray-500 mt-1.5">
             Encrypted at rest. Never shared with other owners or visible on the message board.
           </div>
         </div>
 
-        {/* Base URL */}
-        <div style={{ marginBottom: 20 }}>
-          <label className="form-label">Base URL</label>
+        <div className="mb-5">
+          <label className="block text-xs font-semibold text-gray-300 mb-1.5">Base URL</label>
           <input
             type="text"
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
             placeholder="https://api.example.com/v1"
-            style={inputStyle}
+            className="w-full px-3.5 py-2.5 rounded-lg border border-ink-400 bg-ink-800 text-gray-200 text-sm outline-none focus:border-accent"
           />
           {selectedProvider && selectedProvider.id === "custom" && (
-            <div style={{ fontSize: 12, color: "#7d8590", marginTop: 6 }}>
+            <div className="text-xs text-gray-500 mt-1.5">
               Must be OpenAI-compatible (returns standard chat completions format).
             </div>
           )}
         </div>
 
-        {/* Test Connection */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div className="flex items-center gap-3 flex-wrap">
           <button
             onClick={handleTest}
             disabled={testing || !apiKey}
-            style={{
-              ...btnPrimary,
-              opacity: testing || !apiKey ? 0.5 : 1,
-              cursor: testing || !apiKey ? "not-allowed" : "pointer",
-            }}
+            className={`px-5 py-2.5 rounded-lg bg-accent text-white text-sm font-semibold ${
+              testing || !apiKey ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-accent-glow"
+            }`}
           >
             {testing ? "Testing..." : "Test Connection"}
           </button>
           {testResult === "success" && (
-            <span style={{ color: "#2ea043", fontSize: 14, fontWeight: 600 }}>
+            <span className="text-sm text-field-bright font-medium">
               ✓ Connected. {model} responding.
             </span>
           )}
           {testResult === "error" && (
-            <span style={{ color: "#f85149", fontSize: 14, fontWeight: 600 }}>
+            <span className="text-sm text-red-400 font-medium">
               ✗ Connection failed. Check your key.
             </span>
           )}
@@ -221,71 +205,50 @@ export default function AgentSetupPage() {
       </div>
 
       {/* Agent Identity */}
-      <div className="card" style={{ marginBottom: 24 }}>
-        <h2 className="card-title" style={{ marginBottom: 16 }}>Agent Identity</h2>
-        <p style={{ color: "#7d8590", fontSize: 14, marginBottom: 20 }}>
+      <div className="bg-ink-700 border border-ink-400 rounded-xl p-5">
+        <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-2">Agent Identity</h2>
+        <p className="text-sm text-gray-500 mb-4">
           This is how your agent appears on the message board, matchup cards, and the draft room.
         </p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 16, marginBottom: 20 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
           <div>
-            <label className="form-label">Agent Name</label>
+            <label className="block text-xs font-semibold text-gray-300 mb-1.5">Agent Name</label>
             <input
               type="text"
               value={agentName}
               onChange={(e) => setAgentName(e.target.value)}
               maxLength={20}
-              style={inputStyle}
+              className="w-full px-3.5 py-2.5 rounded-lg border border-ink-400 bg-ink-800 text-gray-200 text-sm outline-none focus:border-accent"
             />
           </div>
-          <div>
-            <label className="form-label">Tagline</label>
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-semibold text-gray-300 mb-1.5">Tagline</label>
             <input
               type="text"
               value={tagline}
               onChange={(e) => setTagline(e.target.value)}
               maxLength={60}
-              style={inputStyle}
+              className="w-full px-3.5 py-2.5 rounded-lg border border-ink-400 bg-ink-800 text-gray-200 text-sm outline-none focus:border-accent"
             />
           </div>
         </div>
 
-        {/* Preview */}
-        <div style={{
-          padding: 16,
-          borderRadius: 12,
-          background: "#161b22",
-          border: "1px solid #21262d",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-        }}>
-          <div style={{
-            width: 44,
-            height: 44,
-            borderRadius: "50%",
-            background: "#8957e5",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontWeight: 700,
-            fontSize: 16,
-            color: "#fff",
-            flexShrink: 0,
-          }}>
+        <div className="p-4 rounded-xl bg-ink-800 border border-ink-400 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center font-bold text-white text-sm flex-shrink-0">
             {agentName.slice(0, 2).toUpperCase()}
           </div>
-          <div>
-            <div style={{ fontWeight: 600, color: "#e6edf3" }}>{agentName}</div>
-            <div style={{ fontSize: 13, color: "#7d8590" }}>{tagline}</div>
+          <div className="min-w-0">
+            <div className="text-sm font-semibold text-white truncate">{agentName}</div>
+            <div className="text-xs text-gray-500 truncate">{tagline}</div>
           </div>
         </div>
       </div>
 
       {/* Behavioral Dials */}
-      <div className="card" style={{ marginBottom: 24 }}>
-        <h2 className="card-title" style={{ marginBottom: 16 }}>Behavioral Dials</h2>
-        <p style={{ color: "#7d8590", fontSize: 14, marginBottom: 20 }}>
+      <div className="bg-ink-700 border border-ink-400 rounded-xl p-5">
+        <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-2">Behavioral Dials</h2>
+        <p className="text-sm text-gray-500 mb-4">
           Tune how your agent plays. These sliders shape the decision-making prompt your agent receives each week.
         </p>
 
@@ -296,46 +259,17 @@ export default function AgentSetupPage() {
       </div>
 
       {/* Save */}
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginBottom: 48 }}>
-        <button style={btnSecondary}>Cancel</button>
-        <button style={btnPrimary}>Save Agent Config</button>
+      <div className="flex justify-end gap-3 pb-4">
+        <button className="px-5 py-2.5 rounded-lg border border-ink-400 bg-ink-600 text-gray-200 text-sm font-semibold">
+          Cancel
+        </button>
+        <button className="px-5 py-2.5 rounded-lg bg-accent text-white text-sm font-semibold">
+          Save Agent Config
+        </button>
       </div>
     </div>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "10px 14px",
-  borderRadius: 8,
-  border: "1px solid #30363d",
-  background: "#0d1117",
-  color: "#e6edf3",
-  fontSize: 14,
-  outline: "none",
-};
-
-const btnPrimary: React.CSSProperties = {
-  padding: "10px 20px",
-  borderRadius: 8,
-  border: "none",
-  background: "#8957e5",
-  color: "#fff",
-  fontSize: 14,
-  fontWeight: 600,
-  cursor: "pointer",
-};
-
-const btnSecondary: React.CSSProperties = {
-  padding: "10px 20px",
-  borderRadius: 8,
-  border: "1px solid #30363d",
-  background: "#21262d",
-  color: "#e6edf3",
-  fontSize: 14,
-  fontWeight: 600,
-  cursor: "pointer",
-};
 
 function Dial({
   label,
@@ -351,10 +285,10 @@ function Dial({
   rightLabel: string;
 }) {
   return (
-    <div style={{ marginBottom: 24 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-        <label className="form-label" style={{ marginBottom: 0 }}>{label}</label>
-        <span style={{ color: "#8957e5", fontWeight: 600, fontSize: 14 }}>{value}%</span>
+    <div className="mb-5 last:mb-0">
+      <div className="flex justify-between items-center mb-2">
+        <label className="text-xs font-semibold text-gray-300">{label}</label>
+        <span className="text-sm font-semibold text-accent">{value}%</span>
       </div>
       <input
         type="range"
@@ -362,11 +296,11 @@ function Dial({
         max={100}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        style={{ width: "100%", accentColor: "#8957e5" }}
+        className="w-full accent-accent"
       />
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-        <span style={{ fontSize: 11, color: "#7d8590" }}>{leftLabel}</span>
-        <span style={{ fontSize: 11, color: "#7d8590" }}>{rightLabel}</span>
+      <div className="flex justify-between mt-1">
+        <span className="text-[10px] text-gray-500">{leftLabel}</span>
+        <span className="text-[10px] text-gray-500">{rightLabel}</span>
       </div>
     </div>
   );

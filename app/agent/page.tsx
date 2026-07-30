@@ -17,7 +17,7 @@ function formatDate(iso: string) {
 
 export default function AgentPage() {
   return (
-    <div className="space-y-6 fade-in pt-14 lg:pt-0">
+    <div className="space-y-6 fade-in">
       <div>
         <h1 className="text-2xl font-bold text-white">Agent Decision Log</h1>
         <p className="text-sm text-gray-500 mt-1">

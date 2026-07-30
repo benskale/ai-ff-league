@@ -70,7 +70,7 @@ export default function FreeAgentsPage() {
   );
 
   return (
-    <div className="space-y-6 fade-in pt-14 lg:pt-0">
+    <div className="space-y-6 fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
@@ -171,7 +171,7 @@ export default function FreeAgentsPage() {
                     </span>
                   </div>
                   {/* Trend row */}
-                  <div className="flex items-center gap-4 mt-1.5">
+                  <div className="flex items-center gap-3 sm:gap-4 mt-1.5 flex-wrap">
                     <div className="flex items-center gap-1">
                       <span className="text-[10px] text-gray-600 uppercase tracking-wide">
                         Trend

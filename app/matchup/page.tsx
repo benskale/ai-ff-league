@@ -58,7 +58,7 @@ export default function MatchupPage() {
 
   if (!opponent) {
     return (
-      <div className="pt-14 lg:pt-0">
+      <div>
         <h1 className="text-2xl font-bold text-white">No upcoming matchup</h1>
         <p className="text-sm text-gray-500 mt-2">
           Check back when the next week&apos;s schedule is set.
@@ -105,7 +105,7 @@ export default function MatchupPage() {
   );
 
   return (
-    <div className="space-y-6 fade-in pt-14 lg:pt-0">
+    <div className="space-y-6 fade-in">
       {/* Header */}
       <div>
         <div className="text-xs text-gray-500 uppercase tracking-wide">
@@ -116,19 +116,19 @@ export default function MatchupPage() {
 
       {/* Side-by-side team banner */}
       <div className="bg-ink-700 border border-ink-400 rounded-2xl p-6">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
           {/* My team */}
-          <div className="flex-1 text-center">
+          <div className="flex-1 text-center min-w-0">
             <div
-              className="w-3 h-12 rounded-full mx-auto mb-2"
+              className="w-2 h-10 sm:w-3 sm:h-12 rounded-full mx-auto mb-2"
               style={{ backgroundColor: myTeam.accentColor }}
             />
-            <div className="text-lg font-bold text-white">{myTeam.name}</div>
-            <div className="text-sm text-gray-500 mt-0.5">
+            <div className="text-sm sm:text-lg font-bold text-white truncate">{myTeam.name}</div>
+            <div className="text-xs sm:text-sm text-gray-500 mt-0.5">
               {myTeam.wins}-{myTeam.losses}
             </div>
             <div
-              className="text-xs font-mono mt-1"
+              className="text-[10px] sm:text-xs font-mono mt-1"
               style={{ color: myTeam.accentColor }}
             >
               {myTeam.agentName}
@@ -136,47 +136,47 @@ export default function MatchupPage() {
           </div>
 
           {/* Center — projected */}
-          <div className="text-center px-4">
-            <div className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">
+          <div className="text-center px-2 sm:px-4 flex-shrink-0">
+            <div className="text-[9px] sm:text-[10px] text-gray-600 uppercase tracking-wider mb-1">
               Projected
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <span
-                className="text-2xl font-bold font-mono"
+                className="text-xl sm:text-2xl font-bold font-mono"
                 style={{ color: myTeam.accentColor }}
               >
                 {myTotal.toFixed(1)}
               </span>
-              <span className="text-gray-700">-</span>
+              <span className="text-gray-700 text-sm">-</span>
               <span
-                className="text-2xl font-bold font-mono"
+                className="text-xl sm:text-2xl font-bold font-mono"
                 style={{ color: opponent.accentColor }}
               >
                 {oppTotal.toFixed(1)}
               </span>
             </div>
             <div
-              className={`text-xs font-mono mt-1 ${
+              className={`text-[10px] sm:text-xs font-mono mt-1 ${
                 totalDiff >= 0 ? "text-field-bright" : "text-red-400"
               }`}
             >
               {totalDiff >= 0 ? "+" : ""}
-              {totalDiff.toFixed(1)} {totalDiff >= 0 ? "favored" : "underdog"}
+              {totalDiff.toFixed(1)}
             </div>
           </div>
 
           {/* Opponent */}
-          <div className="flex-1 text-center">
+          <div className="flex-1 text-center min-w-0">
             <div
-              className="w-3 h-12 rounded-full mx-auto mb-2"
+              className="w-2 h-10 sm:w-3 sm:h-12 rounded-full mx-auto mb-2"
               style={{ backgroundColor: opponent.accentColor }}
             />
-            <div className="text-lg font-bold text-white">{opponent.name}</div>
-            <div className="text-sm text-gray-500 mt-0.5">
+            <div className="text-sm sm:text-lg font-bold text-white truncate">{opponent.name}</div>
+            <div className="text-xs sm:text-sm text-gray-500 mt-0.5">
               {opponent.wins}-{opponent.losses}
             </div>
             <div
-              className="text-xs font-mono mt-1"
+              className="text-[10px] sm:text-xs font-mono mt-1"
               style={{ color: opponent.accentColor }}
             >
               {opponent.agentName}
@@ -235,15 +235,15 @@ export default function MatchupPage() {
             return (
               <div
                 key={slot}
-                className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-3"
+                className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3"
               >
                 {/* My player */}
-                <div className="flex items-center justify-end gap-2 text-right">
+                <div className="flex items-center justify-end gap-2 text-right min-w-0">
                   {me ? (
                     <>
-                      <div>
+                      <div className="min-w-0">
                         <div
-                          className={`text-sm ${
+                          className={`text-xs sm:text-sm truncate ${
                             side === "me" ? "text-white font-medium" : "text-gray-400"
                           }`}
                         >
@@ -254,7 +254,7 @@ export default function MatchupPage() {
                         </div>
                       </div>
                       <div
-                        className={`text-sm font-mono font-bold w-12 text-right ${
+                        className={`text-xs sm:text-sm font-mono font-bold w-8 sm:w-12 text-right flex-shrink-0 ${
                           side === "me" ? "text-white" : "text-gray-500"
                         }`}
                       >
@@ -267,33 +267,33 @@ export default function MatchupPage() {
                 </div>
 
                 {/* Center slot */}
-                <div className="flex flex-col items-center gap-1 px-1">
+                <div className="flex flex-col items-center gap-1 px-0.5 flex-shrink-0">
                   <span
-                    className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                    className={`text-[9px] sm:text-[10px] font-mono font-bold px-1 sm:px-1.5 py-0.5 rounded ${
                       posColor[me?.pos ?? "QB"] ?? "bg-gray-500/15 text-gray-400"
                     }`}
                   >
                     {slot}
                   </span>
-                  <span className={`text-[10px] font-mono ${label.color}`}>
+                  <span className={`text-[9px] sm:text-[10px] font-mono ${label.color}`}>
                     {label.text}
                   </span>
                 </div>
 
                 {/* Opponent player */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   {opp ? (
                     <>
                       <div
-                        className={`text-sm font-mono font-bold w-12 ${
+                        className={`text-xs sm:text-sm font-mono font-bold w-8 sm:w-12 flex-shrink-0 ${
                           side === "opp" ? "text-white" : "text-gray-500"
                         }`}
                       >
                         {opp.projected.toFixed(1)}
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <div
-                          className={`text-sm ${
+                          className={`text-xs sm:text-sm truncate ${
                             side === "opp"
                               ? "text-white font-medium"
                               : "text-gray-400"

@@ -37,7 +37,7 @@ export default function HomePage() {
   );
 
   return (
-    <div className="space-y-8 fade-in pt-14 lg:pt-0">
+    <div className="space-y-6 fade-in sm:space-y-8">
       {/* Hero card */}
       <div
         className="rounded-2xl border border-ink-400 overflow-hidden relative"
@@ -67,7 +67,7 @@ export default function HomePage() {
                 <span className="text-sm text-gray-500">{myTeam.agentPersona}</span>
               </div>
             </div>
-            <div className="flex items-center gap-6 sm:gap-8">
+            <div className="flex items-center justify-center sm:justify-end gap-4 sm:gap-6 sm:gap-8">
               <div>
                 <div className="text-3xl font-bold text-white">
                   {myTeam.wins}-{myTeam.losses}

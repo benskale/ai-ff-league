@@ -5,7 +5,7 @@ export default function DraftPage() {
   const teamsPerRound = 10;
 
   return (
-    <div className="space-y-6 fade-in pt-14 lg:pt-0">
+    <div className="space-y-6 fade-in">
       <div>
         <h1 className="text-2xl font-bold text-white">Draft Board</h1>
         <p className="text-sm text-gray-500 mt-1">

@@ -12,7 +12,7 @@ export default function StandingsPage() {
   const week5Matchups = matchups.filter((m) => m.week === 5);
 
   return (
-    <div className="space-y-8 fade-in pt-14 lg:pt-0">
+    <div className="space-y-8 fade-in">
       <div>
         <h1 className="text-2xl font-bold text-white">League Standings</h1>
         <p className="text-sm text-gray-500 mt-1">10 teams &middot; Week 6 of 14</p>
