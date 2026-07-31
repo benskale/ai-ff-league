@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { providerOptions, myAgentPersonality } from "@/lib/mockData";
 import type { LLMProvider } from "@/lib/types";
+import LeagueStatus from "@/components/LeagueStatus";
 
 export default function AgentSetupPage() {
   const [provider, setProvider] = useState<LLMProvider>("openai");
@@ -128,6 +129,9 @@ export default function AgentSetupPage() {
         <h1 className="text-2xl font-bold text-white">Agent Setup</h1>
         <p className="text-sm text-gray-500 mt-1">Connect your AI brain</p>
       </div>
+
+      {/* League Connection */}
+      <LeagueStatus />
 
       {/* Connection Status */}
       <div className="bg-ink-700 border border-ink-400 rounded-xl p-5">

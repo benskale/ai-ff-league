@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { getActiveLeague } from "@/lib/leagueStore";
+import { loadLeagueData } from "@/lib/sleeperAdapter";
+import LeagueConnect from "@/components/LeagueConnect";
 import { teams, decisions, matchups, myTeamId, currentWeek } from "@/lib/mockData";
 
 const typeMeta: Record<string, { color: string; bg: string; label: string }> = {
@@ -9,10 +12,46 @@ const typeMeta: Record<string, { color: string; bg: string; label: string }> = {
   strategy: { color: "text-accent-glow", bg: "bg-accent/20", label: "STRATEGY" },
 };
 
-export default function HomePage() {
-  const myTeam = teams.find((t) => t.id === myTeamId)!;
+export default async function HomePage() {
+  const activeLeague = getActiveLeague();
+
+  // No league connected: show connect UI
+  if (!activeLeague) {
+    return <LeagueConnect />;
+  }
+
+  let data;
+  let useFallback = false;
+
+  try {
+    data = await loadLeagueData(activeLeague.leagueId, activeLeague.rosterId);
+  } catch {
+    // If Sleeper API fails, fall back to mock data
+    useFallback = true;
+  }
+
+  if (useFallback || !data) {
+    return <FallbackHome />;
+  }
+
+  const { teams, currentWeek, matchups, myTeamId } = data;
+  const myTeam = teams.find((t) => t.id === myTeamId);
+  if (!myTeam) {
+    return (
+      <div className="text-center py-12">
+        <h1 className="text-xl font-bold text-white">Team not found</h1>
+        <p className="text-sm text-gray-500 mt-2">
+          Roster ID {activeLeague.rosterId} not found in this league.
+        </p>
+        <Link href="/setup" className="text-sm text-accent hover:text-accent-glow mt-4 inline-block">
+          Reconnect league ->
+        </Link>
+      </div>
+    );
+  }
+
   const upcomingMatchup = matchups.find(
-    (m) => m.status === "upcoming" && (m.homeTeamId === myTeamId || m.awayTeamId === myTeamId)
+    (m) => m.homeTeamId === myTeamId || m.awayTeamId === myTeamId
   );
   const opponent = upcomingMatchup
     ? teams.find(
@@ -25,16 +64,16 @@ export default function HomePage() {
     : null;
 
   const sortedTeams = [...teams].sort((a, b) => {
-    const pctA = a.wins / (a.wins + a.losses);
-    const pctB = b.wins / (b.wins + b.losses);
+    const pctA = a.wins / Math.max(a.wins + a.losses + a.ties, 1);
+    const pctB = b.wins / Math.max(b.wins + b.losses + b.ties, 1);
     if (pctB !== pctA) return pctB - pctA;
     return b.pointsFor - a.pointsFor;
   });
   const myRank = sortedTeams.findIndex((t) => t.id === myTeamId) + 1;
-  const recentDecisions = decisions.slice(0, 3);
   const injuredPlayers = myTeam.roster.filter(
     (s) => s.player?.status && s.player.status !== "healthy"
   );
+  const isPreseason = data.state.week === 0 || data.state.season_type === "pre";
 
   return (
     <div className="space-y-6 fade-in sm:space-y-8">
@@ -53,7 +92,7 @@ export default function HomePage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
               <div className="text-xs uppercase tracking-widest text-gray-500 mb-1">
-                Week {currentWeek} · Your Team
+                {isPreseason ? "Preseason" : `Week ${currentWeek}`} - {data.league.name}
               </div>
               <h1 className="text-3xl font-bold text-white">{myTeam.name}</h1>
               <div className="flex items-center gap-2 mt-2">
@@ -61,10 +100,10 @@ export default function HomePage() {
                   className="font-mono text-sm"
                   style={{ color: myTeam.accentColor }}
                 >
-                  {myTeam.agentName}
+                  {myTeam.ownerName}
                 </span>
-                <span className="text-gray-600">·</span>
-                <span className="text-sm text-gray-500">{myTeam.agentPersona}</span>
+                <span className="text-gray-600">-</span>
+                <span className="text-sm text-gray-500">{activeLeague.leagueName}</span>
               </div>
             </div>
             <div className="flex items-center justify-center sm:justify-end gap-4 sm:gap-6 sm:gap-8">
@@ -140,7 +179,7 @@ export default function HomePage() {
             </h2>
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-field-bright live-dot" />
-              <span className="text-xs text-field-bright">COACH-Z Online</span>
+              <span className="text-xs text-field-bright">Awaiting Season Start</span>
             </div>
           </div>
           <div className="flex items-start gap-3 mb-4">
@@ -165,13 +204,13 @@ export default function HomePage() {
             </div>
             <div className="flex-1">
               <div className="text-sm text-white">
-                Scanning waivers for Week {currentWeek + 1} values
+                {isPreseason
+                  ? "Connected to your league. Agent will activate when the season starts."
+                  : `Monitoring Week ${currentWeek + 1} waiver values`}
               </div>
               <div className="text-xs text-gray-500 mt-0.5">
-                Last decision 2h ago · Monitoring injury reports for{" "}
-                {injuredPlayers.length} player
-                {injuredPlayers.length === 1 ? "" : "s"} · {decisions.length} total
-                moves this season
+                {myTeam.roster.filter((s) => s.player).length} players on roster -{" "}
+                {injuredPlayers.length} injury concern{injuredPlayers.length === 1 ? "" : "s"}
               </div>
             </div>
           </div>
@@ -197,9 +236,9 @@ export default function HomePage() {
         {/* Matchup teaser */}
         <div className="bg-ink-700 border border-ink-400 rounded-xl p-6">
           <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">
-            Week {currentWeek} Matchup
+            {isPreseason ? "Season Starts Soon" : `Week ${currentWeek} Matchup`}
           </h2>
-          {opponent && (
+          {opponent ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -257,8 +296,14 @@ export default function HomePage() {
                 href="/matchup"
                 className="block text-center text-xs font-medium text-accent hover:text-accent-glow pt-2 border-t border-ink-400"
               >
-                View full matchup →
+                View full matchup ->
               </Link>
+            </div>
+          ) : (
+            <div className="text-sm text-gray-500">
+              {isPreseason
+                ? "No matchups scheduled yet. Draft must complete first."
+                : "No matchup found for this week."}
             </div>
           )}
         </div>
@@ -271,7 +316,7 @@ export default function HomePage() {
             League Standings
           </h2>
           <span className="text-xs text-gray-600">
-            10 teams · Top 6 make playoffs
+            {teams.length} teams
           </span>
         </div>
         <div className="bg-ink-700 border border-ink-400 rounded-xl overflow-hidden">
@@ -280,7 +325,7 @@ export default function HomePage() {
               <tr className="border-b border-ink-400 text-xs text-gray-500 uppercase tracking-wide">
                 <th className="text-left py-3 px-4">#</th>
                 <th className="text-left py-3 px-2">Team</th>
-                <th className="text-left py-3 px-2 hidden sm:table-cell">Agent</th>
+                <th className="text-left py-3 px-2 hidden sm:table-cell">Owner</th>
                 <th className="text-center py-3 px-2">W-L</th>
                 <th className="text-center py-3 px-2 hidden sm:table-cell">PF</th>
                 <th className="text-center py-3 px-2 hidden md:table-cell">PA</th>
@@ -290,7 +335,6 @@ export default function HomePage() {
             <tbody>
               {sortedTeams.map((team, idx) => {
                 const isMe = team.id === myTeamId;
-                const isPlayoff = idx < 6;
                 return (
                   <tr
                     key={team.id}
@@ -299,11 +343,7 @@ export default function HomePage() {
                     }`}
                   >
                     <td className="py-3 px-4">
-                      <span
-                        className={`font-mono ${
-                          isPlayoff ? "text-field-bright" : "text-gray-600"
-                        }`}
-                      >
+                      <span className="font-mono text-gray-500">
                         {idx + 1}
                       </span>
                     </td>
@@ -327,18 +367,19 @@ export default function HomePage() {
                             )}
                           </div>
                           <div className="text-xs text-gray-600 sm:hidden">
-                            {team.agentName}
+                            {team.ownerName}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="py-3 px-2 hidden sm:table-cell">
                       <span className="font-mono text-xs text-gray-500">
-                        {team.agentName}
+                        {team.ownerName}
                       </span>
                     </td>
                     <td className="py-3 px-2 text-center font-mono text-white">
                       {team.wins}-{team.losses}
+                      {team.ties > 0 ? `-${team.ties}` : ""}
                     </td>
                     <td className="py-3 px-2 text-center font-mono text-gray-400 hidden sm:table-cell">
                       {team.pointsFor.toFixed(1)}
@@ -367,50 +408,70 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Recent agent decisions */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
-            Recent Agent Decisions
-          </h2>
-          <Link
-            href="/agent"
-            className="text-xs text-accent hover:text-accent-glow"
-          >
-            View all →
+      {/* Disconnect option */}
+      <div className="text-center">
+        <Link
+          href="/setup"
+          className="text-xs text-gray-600 hover:text-gray-400"
+        >
+          League settings
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// Fallback using mockData when Sleeper API is unavailable
+function FallbackHome() {
+  const myTeam = teams.find((t) => t.id === myTeamId)!;
+  const sortedTeams = [...teams].sort((a, b) => {
+    const pctA = a.wins / (a.wins + a.losses);
+    const pctB = b.wins / (b.wins + b.losses);
+    if (pctB !== pctA) return pctB - pctA;
+    return b.pointsFor - a.pointsFor;
+  });
+  const myRank = sortedTeams.findIndex((t) => t.id === myTeamId) + 1;
+  const recentDecisions = decisions.slice(0, 3);
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-4 text-sm text-yellow-400">
+        Live data unavailable. Showing demo data. Connect a league on the Setup page.
+      </div>
+      <div
+        className="rounded-2xl border border-ink-400 overflow-hidden relative"
+        style={{
+          background: `linear-gradient(135deg, ${myTeam.accentColor}22 0%, #161b22 55%, #0d1117 100%)`,
+        }}
+      >
+        <div className="p-6 sm:p-8">
+          <div className="text-xs uppercase tracking-widest text-gray-500 mb-1">
+            Week {currentWeek} - Demo Data
+          </div>
+          <h1 className="text-3xl font-bold text-white">{myTeam.name}</h1>
+          <Link href="/setup" className="text-sm text-accent hover:text-accent-glow mt-3 inline-block">
+            Connect a real league ->
           </Link>
         </div>
-        <div className="space-y-3">
-          {recentDecisions.map((d) => {
-            const meta = typeMeta[d.type] ?? typeMeta.draft;
-            return (
-              <Link
-                key={d.id}
-                href="/agent"
-                className="block bg-ink-700 border border-ink-400 rounded-lg p-4 hover:border-accent/40 transition-colors"
-              >
-                <div className="flex items-start gap-3">
-                  <span
-                    className={`inline-block px-2 py-0.5 rounded text-xs font-mono flex-shrink-0 ${meta.bg} ${meta.color}`}
-                  >
-                    {meta.label}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm text-white">{d.title}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">
-                      {d.description}
-                    </div>
-                  </div>
-                  <div className="flex-shrink-0 text-right">
-                    <div className="text-xs text-gray-600">Confidence</div>
-                    <div className="text-sm font-mono text-white">
-                      {d.confidence}%
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
+      </div>
+      <div>
+        <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-3">
+          Demo Standings
+        </h2>
+        <div className="bg-ink-700 border border-ink-400 rounded-xl overflow-hidden">
+          <table className="w-full text-sm">
+            <tbody>
+              {sortedTeams.slice(0, 5).map((team, idx) => (
+                <tr key={team.id} className="border-b border-ink-400/50">
+                  <td className="py-3 px-4 font-mono text-gray-600">{idx + 1}</td>
+                  <td className="py-3 px-2 text-gray-300">{team.name}</td>
+                  <td className="py-3 px-2 text-center font-mono text-gray-400">
+                    {team.wins}-{team.losses}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
