@@ -1,25 +1,57 @@
 "use client";
 
-import { useState } from "react";
-import { myAgentConnection, providerOptions, myAgentPersonality } from "@/lib/mockData";
+import { useState, useEffect } from "react";
+import { providerOptions, myAgentPersonality } from "@/lib/mockData";
 import type { LLMProvider } from "@/lib/types";
 
 export default function AgentSetupPage() {
-  const [provider, setProvider] = useState<LLMProvider>(myAgentConnection.provider);
-  const [model, setModel] = useState(myAgentConnection.model);
+  const [provider, setProvider] = useState<LLMProvider>("openai");
+  const [model, setModel] = useState("gpt-4o");
   const [apiKey, setApiKey] = useState("");
-  const [baseUrl, setBaseUrl] = useState(myAgentConnection.baseUrl);
+  const [baseUrl, setBaseUrl] = useState("https://api.openai.com/v1");
   const [agentName, setAgentName] = useState(myAgentPersonality.name);
   const [tagline, setTagline] = useState(myAgentPersonality.tagline);
   const [showKey, setShowKey] = useState(false);
   const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<"idle" | "success" | "error">("idle");
+  const [testResult, setTestResult] = useState<{ status: "idle" | "success" | "error"; latency?: number; response?: string; error?: string }>({ status: "idle" });
   const [riskTolerance, setRiskTolerance] = useState(myAgentPersonality.riskTolerance);
   const [aggressiveness, setAggressiveness] = useState(myAgentPersonality.aggressiveness);
   const [chatterLevel, setChatterLevel] = useState(myAgentPersonality.chatterLevel);
   const [tradeFrequency, setTradeFrequency] = useState(myAgentPersonality.tradeFrequency);
+  const [saving, setSaving] = useState(false);
+  const [saveResult, setSaveResult] = useState<"idle" | "success" | "error">("idle");
+  const [configLoaded, setConfigLoaded] = useState(false);
+  const [savedConfig, setSavedConfig] = useState<{ provider: string; model: string; connectionStatus: string; apiKeyMasked: string } | null>(null);
 
   const selectedProvider = providerOptions.find((p) => p.id === provider);
+
+  // Load existing config on mount
+  useEffect(() => {
+    fetch("/api/agent/config")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.config) {
+          const c = data.config;
+          setProvider(c.provider || "openai");
+          setModel(c.model || "gpt-4o");
+          setBaseUrl(c.baseUrl || c.base_url || "https://api.openai.com/v1");
+          setAgentName(c.agentName || c.agent_name || myAgentPersonality.name);
+          setTagline(c.tagline || myAgentPersonality.tagline);
+          setRiskTolerance(c.riskTolerance ?? c.risk_tolerance ?? myAgentPersonality.riskTolerance);
+          setAggressiveness(c.aggressiveness ?? c.aggressiveness ?? myAgentPersonality.aggressiveness);
+          setChatterLevel(c.chatterLevel ?? c.chatter_level ?? myAgentPersonality.chatterLevel);
+          setTradeFrequency(c.tradeFrequency ?? c.trade_frequency ?? myAgentPersonality.tradeFrequency);
+          setSavedConfig({
+            provider: c.provider || c.provider_id || "",
+            model: c.model || "",
+            connectionStatus: c.connectionStatus || c.connection_status || "connected",
+            apiKeyMasked: c.apiKeyMasked || c.api_key_masked || "",
+          });
+        }
+        setConfigLoaded(true);
+      })
+      .catch(() => setConfigLoaded(true));
+  }, []);
 
   const handleProviderChange = (id: LLMProvider) => {
     setProvider(id);
@@ -30,13 +62,64 @@ export default function AgentSetupPage() {
     }
   };
 
-  const handleTest = () => {
+  const handleTest = async () => {
     setTesting(true);
-    setTestResult("idle");
-    setTimeout(() => {
+    setTestResult({ status: "idle" });
+    try {
+      const res = await fetch("/api/agent/test-connection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider, model, apiKey, baseUrl }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setTestResult({
+          status: "success",
+          latency: data.latencyMs,
+          response: data.modelResponse,
+        });
+      } else {
+        setTestResult({ status: "error", error: data.error || "Connection failed" });
+      }
+    } catch {
+      setTestResult({ status: "error", error: "Network error" });
+    } finally {
       setTesting(false);
-      setTestResult(apiKey.length > 10 ? "success" : "error");
-    }, 1800);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveResult("idle");
+    try {
+      const res = await fetch("/api/agent/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider,
+          model,
+          apiKey,
+          baseUrl,
+          agentName,
+          tagline,
+          riskTolerance,
+          aggressiveness,
+          chatterLevel,
+          tradeFrequency,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSaveResult("success");
+      } else {
+        setSaveResult("error");
+      }
+    } catch {
+      setSaveResult("error");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -50,36 +133,30 @@ export default function AgentSetupPage() {
       <div className="bg-ink-700 border border-ink-400 rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">Current Connection</h2>
-          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-field-dim/20 text-field-bright">
-            ● {myAgentConnection.status.toUpperCase()}
+          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${savedConfig ? "bg-field-dim/20 text-field-bright" : "bg-gray-700 text-gray-500"}`}>
+            ● {(savedConfig?.connectionStatus || "not connected").toUpperCase()}
           </span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Model</div>
-            <div className="text-sm text-gray-200">{myAgentConnection.label}</div>
+        {savedConfig ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div>
+              <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Model</div>
+              <div className="text-sm text-gray-200">{savedConfig.model}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">API Key</div>
+              <div className="text-sm text-gray-200 font-mono">{savedConfig.apiKeyMasked}</div>
+            </div>
+            <div className="col-span-2 sm:col-span-1">
+              <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Endpoint</div>
+              <div className="text-xs text-gray-400 font-mono break-all">{baseUrl}</div>
+            </div>
           </div>
-          <div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">API Key</div>
-            <div className="text-sm text-gray-200 font-mono">{myAgentConnection.apiKeyMasked}</div>
+        ) : (
+          <div className="text-sm text-gray-500">
+            No agent connected yet. Configure your provider below and hit Test Connection.
           </div>
-          <div className="col-span-2 sm:col-span-1">
-            <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Endpoint</div>
-            <div className="text-xs text-gray-400 font-mono break-all">{myAgentConnection.baseUrl}</div>
-          </div>
-          <div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Last Ping</div>
-            <div className="text-sm text-gray-200">{myAgentConnection.lastPing}</div>
-          </div>
-          <div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Monthly Spend</div>
-            <div className="text-sm text-gray-200">${myAgentConnection.monthlySpend.toFixed(2)}</div>
-          </div>
-          <div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Tokens Used</div>
-            <div className="text-sm text-gray-200">{(myAgentConnection.tokensUsed / 1000).toFixed(0)}K</div>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Provider Selection */}
@@ -191,14 +268,14 @@ export default function AgentSetupPage() {
           >
             {testing ? "Testing..." : "Test Connection"}
           </button>
-          {testResult === "success" && (
+          {testResult.status === "success" && (
             <span className="text-sm text-field-bright font-medium">
-              ✓ Connected. {model} responding.
+              ✓ Connected. {model} responded in {testResult.latency}ms.
             </span>
           )}
-          {testResult === "error" && (
+          {testResult.status === "error" && (
             <span className="text-sm text-red-400 font-medium">
-              ✗ Connection failed. Check your key.
+              ✗ {testResult.error || "Connection failed. Check your key."}
             </span>
           )}
         </div>
@@ -263,9 +340,23 @@ export default function AgentSetupPage() {
         <button className="px-5 py-2.5 rounded-lg border border-ink-400 bg-ink-600 text-gray-200 text-sm font-semibold">
           Cancel
         </button>
-        <button className="px-5 py-2.5 rounded-lg bg-accent text-white text-sm font-semibold">
-          Save Agent Config
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className={`px-5 py-2.5 rounded-lg bg-accent text-white text-sm font-semibold ${saving ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-accent-glow"}`}
+        >
+          {saving ? "Saving..." : "Save Agent Config"}
         </button>
+        {saveResult === "success" && (
+          <span className="text-sm text-field-bright font-medium ml-2">
+            ✓ Saved. Your agent is ready.
+          </span>
+        )}
+        {saveResult === "error" && (
+          <span className="text-sm text-red-400 font-medium ml-2">
+            ✗ Save failed. Check your config.
+          </span>
+        )}
       </div>
     </div>
   );
